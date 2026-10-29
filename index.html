@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Horário de Trabalho & Status em Tempo Real | Grupo de Gestão</title>
+  
+  <!-- Google Fonts: Inter & Outfit -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="light-theme">
+  <!-- Background Glow Accents -->
+  <div class="bg-glow bg-glow-1"></div>
+  <div class="bg-glow bg-glow-2"></div>
+
+  <div class="app-container">
+    
+    <!-- Top Navigation Bar -->
+    <header class="top-header">
+      <div class="header-brand">
+        <div class="brand-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
+            <circle cx="9" cy="7" r="4"></circle>
+            <path d="M22 21v-2a4 4 0 0 0-3-3.87"></path>
+            <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+          </svg>
+        </div>
+        <div class="brand-info">
+          <h1>Grupo de Gestão</h1>
+          <span class="brand-subtitle">Controle de Escala & Presença em Tempo Real</span>
+        </div>
+      </div>
+
+      <!-- Live Clock & Simulator Widget -->
+      <div class="live-clock-card" id="liveClockCard">
+        <div class="clock-status-indicator">
+          <span class="pulsing-dot" id="clockModeDot"></span>
+          <span class="clock-mode-label" id="clockModeLabel">Tempo Real</span>
+        </div>
+        <div class="clock-time-display">
+          <span class="clock-time" id="clockTime">--:--:--</span>
+          <span class="clock-day-date" id="clockDate">Carregando...</span>
+        </div>
+        <button class="btn-toggle-sim" id="btnToggleSim" title="Alternar entre relógio ao vivo e simulação de horário">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"></circle>
+            <polyline points="12 6 12 12 16 14"></polyline>
+          </svg>
+          <span id="btnSimLabel">Simular</span>
+        </button>
+      </div>
+
+      <!-- Header Actions -->
+      <div class="header-actions">
+        <button class="btn btn-outline" id="btnExport" title="Imprimir ou Exportar Relatório">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="6 9 6 2 18 2 18 9"></polyline>
+            <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path>
+            <rect x="6" y="14" width="12" height="8"></rect>
+          </svg>
+          <span>Imprimir / PDF</span>
+        </button>
+
+        <button class="btn btn-primary" id="btnOpenNewColab">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <line x1="12" y1="5" x2="12" y2="19"></line>
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+          </svg>
+          <span>Novo Colaborador</span>
+        </button>
+
+        <!-- Theme Toggle -->
+        <button class="icon-btn" id="themeToggle" title="Alternar tema Claro / Escuro">
+          <svg class="sun-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="5"></circle>
+            <line x1="12" y1="1" x2="12" y2="3"></line>
+            <line x1="12" y1="21" x2="12" y2="23"></line>
+            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+            <line x1="1" y1="12" x2="3" y2="12"></line>
+            <line x1="21" y1="12" x2="23" y2="12"></line>
+            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+          </svg>
+        </button>
+      </div>
+    </header>
+
+    <!-- Simulator Bar (Conditionally Visible) -->
+    <div class="simulator-bar hidden" id="simulatorBar">
+      <div class="sim-content">
+        <div class="sim-tag">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+          </svg>
+          <span>MODO SIMULAÇÃO ATIVO</span>
+        </div>
+        <div class="sim-controls">
+          <label>
+            <span>Dia:</span>
+            <select id="simDaySelect">
+              <option value="1">2ª-feira (Segunda)</option>
+              <option value="2">3ª-feira (Terça)</option>
+              <option value="3">4ª-feira (Quarta)</option>
+              <option value="4">5ª-feira (Quinta)</option>
+              <option value="5">6ª-feira (Sexta)</option>
+              <option value="6">Sábado</option>
+              <option value="0">Domingo</option>
+            </select>
+          </label>
+          <label>
+            <span>Horário:</span>
+            <input type="time" id="simTimeInput" step="60">
+          </label>
+          <button class="btn btn-sm btn-ghost" id="btnResetSim">Voltar ao Horário Real</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Quick Stats Cards Summary -->
+    <section class="stats-overview" id="statsOverview">
+      <div class="stat-card stat-working active-filter" data-filter="working">
+        <div class="stat-icon-wrapper working-glow">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <polyline points="20 6 9 17 4 12"></polyline>
+          </svg>
+        </div>
+        <div class="stat-data">
+          <span class="stat-number" id="countWorking">0</span>
+          <span class="stat-label">Trabalhando Agora</span>
+        </div>
+        <div class="stat-badge working-badge">Em Turno</div>
+      </div>
+
+      <div class="stat-card stat-offline" data-filter="offline">
+        <div class="stat-icon-wrapper offline-glow">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="12" y1="8" x2="12" y2="12"></line>
+            <line x1="12" y1="16" x2="12.01" y2="16"></line>
+          </svg>
+        </div>
+        <div class="stat-data">
+          <span class="stat-number" id="countOffline">0</span>
+          <span class="stat-label">Fora do Expediente</span>
+        </div>
+        <div class="stat-badge offline-badge">Inativo</div>
+      </div>
+
+      <div class="stat-card stat-offday" data-filter="offday">
+        <div class="stat-icon-wrapper offday-glow">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+            <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+          </svg>
+        </div>
+        <div class="stat-data">
+          <span class="stat-number" id="countOffDay">0</span>
+          <span class="stat-label">Folga Hoje</span>
+        </div>
+        <div class="stat-badge offday-badge">Folga</div>
+      </div>
+
+      <div class="stat-card stat-total" data-filter="all">
+        <div class="stat-icon-wrapper total-glow">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+            <circle cx="9" cy="7" r="4"></circle>
+            <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+            <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+          </svg>
+        </div>
+        <div class="stat-data">
+          <span class="stat-number" id="countTotal">16</span>
+          <span class="stat-label">Total Cadastrados</span>
+        </div>
+        <div class="stat-badge total-badge">Equipe</div>
+      </div>
+    </section>
+
+    <!-- Toolbar: Search, Filters & View Options -->
+    <div class="controls-toolbar">
+      <!-- Search Input -->
+      <div class="search-box">
+        <svg class="search-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="11" cy="11" r="8"></circle>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+        </svg>
+        <input 
+          type="text" 
+          id="searchInput" 
+          placeholder="Digite o nome da pessoa para buscar instantaneamente... (Pressione /)" 
+          autocomplete="off"
+        >
+        <button class="clear-search-btn hidden" id="clearSearchBtn" title="Limpar pesquisa">&times;</button>
+        <span class="search-badge-key">/</span>
+      </div>
+
+      <!-- Filters & Groupings -->
+      <div class="filter-group">
+        <!-- Status Filter Pills -->
+        <div class="filter-pills">
+          <button class="pill active" data-status-filter="all">Todos</button>
+          <button class="pill" data-status-filter="working">Trabalhando</button>
+          <button class="pill" data-status-filter="offline">Fora</button>
+          <button class="pill" data-status-filter="offday">Folga</button>
+        </div>
+
+        <!-- CFP Filter -->
+        <select class="custom-select" id="cfpFilter">
+          <option value="all">Todos CFPs</option>
+          <option value="103">CFP 103</option>
+          <option value="108">CFP 108</option>
+        </select>
+
+        <!-- View Mode Switcher -->
+        <div class="view-switcher">
+          <button class="view-btn active" id="btnViewCards" title="Visualização em Cards Detalhados">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="3" y="3" width="7" height="7"></rect>
+              <rect x="14" y="3" width="7" height="7"></rect>
+              <rect x="14" y="14" width="7" height="7"></rect>
+              <rect x="3" y="14" width="7" height="7"></rect>
+            </svg>
+            <span>Cards</span>
+          </button>
+          <button class="view-btn" id="btnViewTable" title="Visualização em Tabela Semanal Completa">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+              <line x1="3" y1="9" x2="21" y2="9"></line>
+              <line x1="3" y1="15" x2="21" y2="15"></line>
+              <line x1="9" y1="3" x2="9" y2="21"></line>
+              <line x1="15" y1="3" x2="15" y2="21"></line>
+            </svg>
+            <span>Tabela Semanal</span>
+          </button>
+          <button class="view-btn" id="btnViewTimeline" title="Linha do Tempo Visual do Dia">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="3" y1="12" x2="21" y2="12"></line>
+              <line x1="3" y1="6" x2="21" y2="6"></line>
+              <line x1="3" y1="18" x2="21" y2="18"></line>
+            </svg>
+            <span>Timeline</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Active Filter Summary Alert (when filters are active) -->
+    <div class="filter-status-bar hidden" id="filterStatusBar">
+      <span>Filtrando por: <strong id="filterSummaryText">--</strong></span>
+      <button class="btn-link" id="btnResetAllFilters">Limpar todos os filtros</button>
+    </div>
+
+    <!-- Main Content Area -->
+    <main class="main-content">
+      
+      <!-- VIEW 1: Cards Grid -->
+      <section class="view-section active" id="cardsView">
+        <div class="cards-grid" id="cardsGridContainer">
+          <!-- Cards injected via Javascript -->
+        </div>
+      </section>
+
+      <!-- VIEW 2: Complete Weekly Table -->
+      <section class="view-section" id="tableView">
+        <div class="table-responsive-wrapper card-glass">
+          <div class="table-legend-header">
+            <div class="legend-info">
+              <h3>Tabela Semanal Completa de Gestão</h3>
+              <p>Escala oficial de trabalho por colaborador. Coluna do dia atual destacada com indicador de presença.</p>
+            </div>
+            <div class="legend-badges">
+              <span class="legend-item"><span class="badge-dot working"></span> Trabalhando Agora</span>
+              <span class="legend-item"><span class="badge-dot offline"></span> Fora de Turno</span>
+              <span class="legend-item"><span class="badge-dot offday"></span> Folga</span>
+            </div>
+          </div>
+          <table class="schedule-table" id="scheduleTable">
+            <thead>
+              <tr>
+                <th class="th-colab">Colaborador</th>
+                <th class="th-cfp">CFP</th>
+                <th class="th-day" data-day="1">2ª-feira</th>
+                <th class="th-day" data-day="2">3ª-feira</th>
+                <th class="th-day" data-day="3">4ª-feira</th>
+                <th class="th-day" data-day="4">5ª-feira</th>
+                <th class="th-day" data-day="5">6ª-feira</th>
+                <th class="th-day" data-day="6">Sábado</th>
+                <th class="th-actions">Ações</th>
+              </tr>
+            </thead>
+            <tbody id="tableBody">
+              <!-- Rows injected via Javascript -->
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- VIEW 3: Today's Timeline View -->
+      <section class="view-section" id="timelineView">
+        <div class="card-glass timeline-container">
+          <div class="timeline-header">
+            <div>
+              <h3 id="timelineTitle">Linha do Tempo de Hoje</h3>
+              <p>Visualização gráfica das faixas de horário de trabalho e localização do momento atual.</p>
+            </div>
+            <div class="timeline-now-label" id="timelineNowBadge">
+              Agora: <strong>--:--</strong>
+            </div>
+          </div>
+
+          <div class="timeline-scale">
+            <div class="timeline-scale-item">06:00</div>
+            <div class="timeline-scale-item">08:00</div>
+            <div class="timeline-scale-item">10:00</div>
+            <div class="timeline-scale-item">12:00</div>
+            <div class="timeline-scale-item">14:00</div>
+            <div class="timeline-scale-item">16:00</div>
+            <div class="timeline-scale-item">18:00</div>
+            <div class="timeline-scale-item">20:00</div>
+            <div class="timeline-scale-item">22:00</div>
+            <div class="timeline-scale-item">23:00</div>
+          </div>
+
+          <div class="timeline-rows" id="timelineRows">
+            <!-- Timeline bars injected via Javascript -->
+          </div>
+        </div>
+      </section>
+
+      <!-- Empty State -->
+      <div class="empty-state hidden" id="emptyState">
+        <div class="empty-icon">
+          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            <line x1="8" y1="11" x2="14" y2="11"></line>
+          </svg>
+        </div>
+        <h3>Nenhum colaborador encontrado</h3>
+        <p>Não encontramos ninguém correspondente aos termos de busca ou filtros selecionados.</p>
+        <button class="btn btn-outline" id="btnEmptyReset">Limpar Filtros</button>
+      </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="app-footer">
+      <div class="footer-left">
+        <span>Sistema de Gestão de Escalas &bull; Base atualizada: 09/09/2026</span>
+      </div>
+      <div class="footer-right">
+        <button class="btn-link-subtle" id="btnResetDefaultData">Restaurar Dados Padrão da Tabela</button>
+      </div>
+    </footer>
+  </div>
+
+  <!-- Modal: Adicionar / Editar Colaborador -->
+  <div class="modal-backdrop hidden" id="colabModal">
+    <div class="modal-box modal-lg">
+      <div class="modal-header">
+        <div class="modal-title-group">
+          <h2 id="modalTitle">Editar Colaborador</h2>
+          <span class="modal-subtitle">Atualize nome, foto de perfil, CFP e horários da semana</span>
+        </div>
+        <button class="modal-close-btn" id="btnCloseModal">&times;</button>
+      </div>
+
+      <form id="colabForm" class="modal-body">
+        <input type="hidden" id="editColabId">
+
+        <!-- Top Profile Info Section -->
+        <div class="form-row profile-intro-row">
+          <!-- Avatar Preview & Photo URL -->
+          <!-- Avatar Preview & Photo / Paste Section -->
+          <div class="avatar-editor-block">
+            <div class="avatar-preview-box" id="avatarPreviewContainer">
+              <img id="modalAvatarPreview" class="avatar-preview-img hidden" src="" alt="Foto">
+              <div id="modalAvatarFallback" class="avatar-fallback-box">AD</div>
+            </div>
+            
+            <div class="avatar-options-wrap">
+              <label class="section-label">Foto de Perfil do Colaborador</label>
+              
+              <!-- Dropzone interativa para colar imagem (Ctrl+V) ou selecionar arquivo -->
+              <div class="paste-dropzone" id="pasteDropzone" tabindex="0" title="Clique aqui e pressione Ctrl+V para colar">
+                <div class="dropzone-icon">
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                  </svg>
+                </div>
+                <div class="dropzone-info">
+                  <span class="dropzone-title"><strong>Clique aqui e pressione Ctrl+V</strong> para colar a imagem</span>
+                  <span class="dropzone-subtitle">ou clique para escolher um arquivo do seu computador</span>
+                </div>
+                <button type="button" class="btn btn-sm btn-outline" id="btnPasteClipboard" title="Colar direto da área de transferência">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path>
+                    <rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect>
+                  </svg>
+                  <span>Colar Imagem</span>
+                </button>
+              </div>
+              <input type="file" id="fileAvatarInput" accept="image/*" class="hidden">
+
+              <!-- Ou inserir link da foto -->
+              <div class="url-input-toggle-row">
+                <span class="or-divider">ou use um link de internet:</span>
+                <div class="input-with-button">
+                  <input 
+                    type="url" 
+                    id="editAvatarUrl" 
+                    placeholder="https://exemplo.com/foto.jpg"
+                  >
+                  <button type="button" class="btn btn-sm btn-outline" id="btnTestAvatar">Aplicar Link</button>
+                </div>
+              </div>
+
+              <!-- Quick avatar suggestions & Clear -->
+              <div class="quick-avatar-chips">
+                <span class="chip-label">Exemplos rápidos:</span>
+                <button type="button" class="chip-btn" data-url="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=250&q=80">Foto 1</button>
+                <button type="button" class="chip-btn" data-url="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=250&q=80">Foto 2</button>
+                <button type="button" class="chip-btn" data-url="https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=250&q=80">Foto 3</button>
+                <button type="button" class="chip-btn btn-chip-danger" id="btnClearPhoto">Remover Foto</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Name & CFP Row -->
+        <div class="form-grid-2">
+          <div class="form-group">
+            <label for="editColabName">Nome do Colaborador *</label>
+            <input type="text" id="editColabName" required placeholder="Ex: Leandro Silva">
+          </div>
+          <div class="form-group">
+            <label for="editColabCfp">CFP Principal / Base *</label>
+            <input type="text" id="editColabCfp" required placeholder="Ex: 108 ou 103 ou 108 / 103">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="editColabCargo">Cargo / Função</label>
+          <input type="text" id="editColabCargo" placeholder="Ex: Gestão Operacional">
+        </div>
+
+        <!-- Weekly Schedule Builder -->
+        <div class="schedule-builder-section">
+          <div class="schedule-builder-header">
+            <h3>Escala Semanal de Trabalho</h3>
+            <span class="helper-text">Defina o horário de entrada e saída para cada dia da semana ou marque como Folga.</span>
+          </div>
+
+          <div class="schedule-days-list" id="scheduleDaysList">
+            <!-- Injected via Javascript for each day (2ª to Sáb + Dom) -->
+          </div>
+        </div>
+
+        <!-- Modal Actions -->
+        <div class="modal-footer">
+          <button type="button" class="btn btn-danger-ghost hidden" id="btnDeleteColab">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="3 6 5 6 21 6"></polyline>
+              <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+            </svg>
+            <span>Excluir Colaborador</span>
+          </button>
+          
+          <div class="footer-save-group">
+            <button type="button" class="btn btn-outline" id="btnCancelModal">Cancelar</button>
+            <button type="submit" class="btn btn-primary" id="btnSaveColab">Salvar Alterações</button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Notification Toast Container -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <!-- Scripts -->
+  <script src="data.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

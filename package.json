@@ -1,0 +1,19 @@
+{
+  "name": "horario-gestao",
+  "version": "1.0.0",
+  "description": "Sistema de Gestão de Escalas e Ponto em Tempo Real - Grupo de Gestão",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "keywords": [
+    "gestao",
+    "escalas",
+    "dashboard",
+    "tempo-real",
+    "vercel"
+  ],
+  "author": "clientedev",
+  "license": "MIT"
+}
