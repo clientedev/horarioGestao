@@ -1,10 +1,10 @@
-/**
+﻿/**
  * SISTEMA DE GESTÃO DE ESCALAS & PRESENÇA EM TEMPO REAL
  * Lógica Completa de Aplicação, Renderização e Persistência
  */
 
 // Chaves de armazenamento LocalStorage
-const STORAGE_KEY = "gestao_colaboradores_v1";
+const STORAGE_KEY = "gestao_colaboradores_v2";
 const THEME_KEY = "gestao_theme_preference";
 
 // Estado Global da Aplicação
@@ -1424,3 +1424,4 @@ function showToast(message, type = "info") {
 
 // Expor função de abrir edição no escopo global para onclicks
 window.openEditModal = openEditModal;
+
