@@ -90,12 +90,24 @@ function saveData() {
 function startClock() {
   updateClockDisplay();
   if (state.clockInterval) clearInterval(state.clockInterval);
+  
+  let lastMinute = new Date().getMinutes();
+
   state.clockInterval = setInterval(() => {
     updateClockDisplay();
-    // Atualiza status e render a cada segundo se estiver no modo real
+    
+    // Atualiza status e cards somente quando o minuto mudar (e não a cada segundo)
     if (!state.isSimulating) {
-      updateStats();
-      updateDynamicElements();
+      const currentMinute = new Date().getMinutes();
+      if (currentMinute !== lastMinute) {
+        lastMinute = currentMinute;
+        updateStats();
+        // Não re-renderiza se o modal estiver aberto para não travar a digitação do usuário
+        const modal = document.getElementById("colabModal");
+        if (modal && modal.classList.contains("hidden")) {
+          updateDynamicElements();
+        }
+      }
     }
   }, 1000);
 }
@@ -695,21 +707,27 @@ function openNewColabModal() {
 }
 
 function openEditModal(colabId) {
-  const colab = state.collaborators.find(c => c.id === colabId);
-  if (!colab) return;
+  try {
+    const colab = state.collaborators.find(c => c.id === colabId);
+    if (!colab) return;
 
-  document.getElementById("modalTitle").textContent = `Editar: ${colab.name}`;
-  document.getElementById("editColabId").value = colab.id;
-  document.getElementById("editColabName").value = colab.name;
-  document.getElementById("editColabCfp").value = colab.cpf_cfp;
-  document.getElementById("editColabCargo").value = colab.cargo || "Gestão Operacional";
-  document.getElementById("editAvatarUrl").value = colab.avatarUrl || "";
-  document.getElementById("btnDeleteColab").classList.remove("hidden");
+    document.getElementById("modalTitle").textContent = `Editar: ${colab.name}`;
+    document.getElementById("editColabId").value = colab.id;
+    document.getElementById("editColabName").value = colab.name || "";
+    document.getElementById("editColabCfp").value = colab.cpf_cfp || "";
+    document.getElementById("editColabCargo").value = colab.cargo || "Gestão Operacional";
+    document.getElementById("editAvatarUrl").value = colab.avatarUrl || "";
+    
+    const deleteBtn = document.getElementById("btnDeleteColab");
+    if (deleteBtn) deleteBtn.classList.remove("hidden");
 
-  updateModalAvatarPreview(colab.avatarUrl, getInitials(colab.name));
-  renderModalScheduleInputs(colab.schedule);
+    updateModalAvatarPreview(colab.avatarUrl, getInitials(colab.name));
+    renderModalScheduleInputs(colab.schedule || {});
 
-  colabModal.classList.remove("hidden");
+    colabModal.classList.remove("hidden");
+  } catch (err) {
+    console.error("Erro ao abrir modal de edição:", err);
+  }
 }
 
 function closeModal() {
@@ -720,10 +738,11 @@ function updateModalAvatarPreview(url, fallbackText) {
   const img = document.getElementById("modalAvatarPreview");
   const fallback = document.getElementById("modalAvatarFallback");
 
+  if (!img || !fallback) return;
+
   fallback.textContent = fallbackText || "??";
 
-  if (url && url.trim().length > 0) {
-    img.src = url;
+  if (url && typeof url === "string" && url.trim().length > 0) {
     img.onload = () => {
       img.classList.remove("hidden");
       fallback.classList.add("hidden");
@@ -732,7 +751,9 @@ function updateModalAvatarPreview(url, fallbackText) {
       img.classList.add("hidden");
       fallback.classList.remove("hidden");
     };
+    img.src = url.trim();
   } else {
+    img.removeAttribute("src");
     img.classList.add("hidden");
     fallback.classList.remove("hidden");
   }
@@ -740,18 +761,19 @@ function updateModalAvatarPreview(url, fallbackText) {
 
 function renderModalScheduleInputs(schedule) {
   const container = document.getElementById("scheduleDaysList");
+  if (!container) return;
   
-  // Renderiza dias: 2ª (1), 3ª (2), 4ª (3), 5ª (4), 6ª (5), Sáb (6), Dom (0)
+  const safeSchedule = schedule || {};
   const orderedDays = [1, 2, 3, 4, 5, 6, 0];
 
   container.innerHTML = orderedDays.map(dayKey => {
     const day = WEEK_DAYS.find(w => w.key === dayKey);
-    const dayData = schedule[dayKey] || { active: false, start: "", end: "", cfp: "" };
+    const dayData = safeSchedule[dayKey] || { active: false, start: "", end: "", cfp: "" };
     const isOff = !dayData.active || dayData.isOff || !dayData.start;
 
     return `
       <div class="day-row-item" data-day-key="${dayKey}">
-        <span class="day-name-badge">${day.name}</span>
+        <span class="day-name-badge">${day ? day.name : "Dia"}</span>
         
         <div class="day-inputs-group">
           <label style="display:flex; align-items:center; gap:4px; font-size:0.75rem;">

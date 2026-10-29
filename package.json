@@ -1,16 +1,14 @@
 {
   "name": "horario-gestao",
   "version": "1.0.0",
-  "description": "Sistema de Gestão de Escalas e Ponto em Tempo Real - Grupo de Gestão",
+  "description": "Sistema de Gestao de Escalas e Ponto em Tempo Real",
   "scripts": {
-    "dev": "node local-server.js",
-    "start": "node local-server.js"
+    "dev": "node local-server.js"
   },
   "keywords": [
     "gestao",
     "escalas",
-    "dashboard",
-    "tempo-real"
+    "dashboard"
   ],
   "author": "clientedev",
   "license": "MIT"
