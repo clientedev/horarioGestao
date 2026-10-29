@@ -1,29 +1,34 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Horário de Trabalho & Status em Tempo Real | Grupo de Gestão</title>
-  
+
   <!-- Google Fonts: Inter & Outfit -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap"
+    rel="stylesheet">
+
   <link rel="stylesheet" href="style.css">
 </head>
+
 <body class="light-theme">
   <!-- Background Glow Accents -->
   <div class="bg-glow bg-glow-1"></div>
   <div class="bg-glow bg-glow-2"></div>
 
   <div class="app-container">
-    
+
     <!-- Top Navigation Bar -->
     <header class="top-header">
       <div class="header-brand">
         <div class="brand-icon">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+            stroke-linecap="round" stroke-linejoin="round">
             <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
             <circle cx="9" cy="7" r="4"></circle>
             <path d="M22 21v-2a4 4 0 0 0-3-3.87"></path>
@@ -57,13 +62,22 @@
 
       <!-- Header Actions -->
       <div class="header-actions">
+        <button class="btn btn-outline btn-sync-header" id="btnOpenSyncModal" title="Sincronizar dados e fotos com outro celular ou computador">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M19 16.9A5 5 0 0 0 18 7h-1.26A8 8 0 1 0 4 15.25"></path>
+            <polyline points="8 14 12 18 16 14"></polyline>
+            <line x1="12" y1="9" x2="12" y2="18"></line>
+          </svg>
+          <span>Sincronizar / Salvar</span>
+        </button>
+
         <button class="btn btn-outline" id="btnExport" title="Imprimir ou Exportar Relatório">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <polyline points="6 9 6 2 18 2 18 9"></polyline>
             <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path>
             <rect x="6" y="14" width="12" height="8"></rect>
           </svg>
-          <span>Imprimir / PDF</span>
+          <span class="hide-mobile-text">Imprimir</span>
         </button>
 
         <button class="btn btn-primary" id="btnOpenNewColab">
@@ -76,7 +90,8 @@
 
         <!-- Theme Toggle -->
         <button class="icon-btn" id="themeToggle" title="Alternar tema Claro / Escuro">
-          <svg class="sun-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <svg class="sun-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+            stroke-width="2">
             <circle cx="12" cy="12" r="5"></circle>
             <line x1="12" y1="1" x2="12" y2="3"></line>
             <line x1="12" y1="21" x2="12" y2="23"></line>
@@ -187,16 +202,13 @@
     <div class="controls-toolbar">
       <!-- Search Input -->
       <div class="search-box">
-        <svg class="search-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <svg class="search-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+          stroke-width="2">
           <circle cx="11" cy="11" r="8"></circle>
           <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
         </svg>
-        <input 
-          type="text" 
-          id="searchInput" 
-          placeholder="Digite o nome da pessoa para buscar instantaneamente... (Pressione /)" 
-          autocomplete="off"
-        >
+        <input type="text" id="searchInput"
+          placeholder="Digite o nome da pessoa para buscar instantaneamente... (Pressione /)" autocomplete="off">
         <button class="clear-search-btn hidden" id="clearSearchBtn" title="Limpar pesquisa">&times;</button>
         <span class="search-badge-key">/</span>
       </div>
@@ -259,7 +271,7 @@
 
     <!-- Main Content Area -->
     <main class="main-content">
-      
+
       <!-- VIEW 1: Cards Grid -->
       <section class="view-section active" id="cardsView">
         <div class="cards-grid" id="cardsGridContainer">
@@ -273,7 +285,8 @@
           <div class="table-legend-header">
             <div class="legend-info">
               <h3>Tabela Semanal Completa de Gestão</h3>
-              <p>Escala oficial de trabalho por colaborador. Coluna do dia atual destacada com indicador de presença.</p>
+              <p>Escala oficial de trabalho por colaborador. Coluna do dia atual destacada com indicador de presença.
+              </p>
             </div>
             <div class="legend-badges">
               <span class="legend-item"><span class="badge-dot working"></span> Trabalhando Agora</span>
@@ -361,7 +374,7 @@
   </div>
 
   <!-- Modal: Adicionar / Editar Colaborador -->
-  <div class="modal-backdrop hidden" id="colabModal" style="display: none;">
+  <div class="modal-backdrop hidden" id="colabModal">
     <div class="modal-box modal-lg">
       <div class="modal-header">
         <div class="modal-title-group">
@@ -383,12 +396,13 @@
               <img id="modalAvatarPreview" class="avatar-preview-img hidden" src="" alt="Foto">
               <div id="modalAvatarFallback" class="avatar-fallback-box">AD</div>
             </div>
-            
+
             <div class="avatar-options-wrap">
               <label class="section-label">Foto de Perfil do Colaborador</label>
-              
+
               <!-- Dropzone interativa para colar imagem (Ctrl+V) ou selecionar arquivo -->
-              <div class="paste-dropzone" id="pasteDropzone" tabindex="0" title="Clique aqui e pressione Ctrl+V para colar">
+              <div class="paste-dropzone" id="pasteDropzone" tabindex="0"
+                title="Clique aqui e pressione Ctrl+V para colar">
                 <div class="dropzone-icon">
                   <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
@@ -396,10 +410,12 @@
                   </svg>
                 </div>
                 <div class="dropzone-info">
-                  <span class="dropzone-title"><strong>Clique aqui e pressione Ctrl+V</strong> para colar a imagem</span>
+                  <span class="dropzone-title"><strong>Clique aqui e pressione Ctrl+V</strong> para colar a
+                    imagem</span>
                   <span class="dropzone-subtitle">ou clique para escolher um arquivo do seu computador</span>
                 </div>
-                <button type="button" class="btn btn-sm btn-outline" id="btnPasteClipboard" title="Colar direto da área de transferência">
+                <button type="button" class="btn btn-sm btn-outline" id="btnPasteClipboard"
+                  title="Colar direto da área de transferência">
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path>
                     <rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect>
@@ -413,11 +429,7 @@
               <div class="url-input-toggle-row">
                 <span class="or-divider">ou use um link de internet:</span>
                 <div class="input-with-button">
-                  <input 
-                    type="url" 
-                    id="editAvatarUrl" 
-                    placeholder="https://exemplo.com/foto.jpg"
-                  >
+                  <input type="url" id="editAvatarUrl" placeholder="https://exemplo.com/foto.jpg">
                   <button type="button" class="btn btn-sm btn-outline" id="btnTestAvatar">Aplicar Link</button>
                 </div>
               </div>
@@ -425,9 +437,15 @@
               <!-- Quick avatar suggestions & Clear -->
               <div class="quick-avatar-chips">
                 <span class="chip-label">Exemplos rápidos:</span>
-                <button type="button" class="chip-btn" data-url="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=250&q=80">Foto 1</button>
-                <button type="button" class="chip-btn" data-url="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=250&q=80">Foto 2</button>
-                <button type="button" class="chip-btn" data-url="https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=250&q=80">Foto 3</button>
+                <button type="button" class="chip-btn"
+                  data-url="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=250&q=80">Foto
+                  1</button>
+                <button type="button" class="chip-btn"
+                  data-url="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=250&q=80">Foto
+                  2</button>
+                <button type="button" class="chip-btn"
+                  data-url="https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=250&q=80">Foto
+                  3</button>
                 <button type="button" class="chip-btn btn-chip-danger" id="btnClearPhoto">Remover Foto</button>
               </div>
             </div>
@@ -455,7 +473,8 @@
         <div class="schedule-builder-section">
           <div class="schedule-builder-header">
             <h3>Escala Semanal de Trabalho</h3>
-            <span class="helper-text">Defina o horário de entrada e saída para cada dia da semana ou marque como Folga.</span>
+            <span class="helper-text">Defina o horário de entrada e saída para cada dia da semana ou marque como
+              Folga.</span>
           </div>
 
           <div class="schedule-days-list" id="scheduleDaysList">
@@ -472,13 +491,86 @@
             </svg>
             <span>Excluir Colaborador</span>
           </button>
-          
+
           <div class="footer-save-group">
             <button type="button" class="btn btn-outline" id="btnCancelModal">Cancelar</button>
             <button type="submit" class="btn btn-primary" id="btnSaveColab">Salvar Alterações</button>
           </div>
         </div>
       </form>
+    </div>
+  </div>
+
+  <!-- Modal: Sincronização entre Dispositivos e Backup -->
+  <div class="modal-backdrop hidden" id="syncModal" style="display: none;">
+    <div class="modal-box modal-md">
+      <div class="modal-header">
+        <div class="modal-title-group">
+          <h2>Sincronizar entre Dispositivos / Backup</h2>
+          <span class="modal-subtitle">Salve suas fotos e horários para abrir no celular e em outros aparelhos</span>
+        </div>
+        <button class="modal-close-btn" id="btnCloseSyncModal">&times;</button>
+      </div>
+
+      <div class="modal-body sync-modal-content">
+        <!-- Card 1: Compartilhar / Copiar Código -->
+        <div class="sync-card">
+          <div class="sync-card-header">
+            <span class="sync-icon">📋</span>
+            <div>
+              <h4>Exportar Dados e Fotos deste Aparelho</h4>
+              <p>Copie ou baixe o arquivo com todos os colaboradores e fotos salvos neste navegador.</p>
+            </div>
+          </div>
+          
+          <div class="sync-actions-row">
+            <button type="button" class="btn btn-primary" id="btnCopyDataJson">
+              📋 Copiar Dados da Escala
+            </button>
+            <button type="button" class="btn btn-outline" id="btnDownloadJson">
+              💾 Baixar Arquivo (.json)
+            </button>
+          </div>
+        </div>
+
+        <!-- Card 2: Importar no Celular ou Outro Computador -->
+        <div class="sync-card">
+          <div class="sync-card-header">
+            <span class="sync-icon">📥</span>
+            <div>
+              <h4>Importar Dados no Celular / Novo Dispositivo</h4>
+              <p>Cole o código copiado do outro computador para carregar todas as fotos e escalas aqui.</p>
+            </div>
+          </div>
+
+          <textarea id="importJsonTextarea" placeholder="Cole aqui os dados copiados do outro dispositivo..." rows="3" class="sync-textarea"></textarea>
+
+          <div class="sync-actions-row">
+            <button type="button" class="btn btn-primary" id="btnApplyImportedJson">
+              Carregar neste Dispositivo
+            </button>
+            <label class="btn btn-outline file-upload-btn">
+              📂 Carregar Arquivo JSON
+              <input type="file" id="importJsonFileInput" accept=".json" class="hidden">
+            </label>
+          </div>
+        </div>
+
+        <!-- Card 3: Tornar Permanente no Sistema -->
+        <div class="sync-card" style="background: rgba(37, 99, 235, 0.05); border-color: rgba(37, 99, 235, 0.3);">
+          <div class="sync-card-header">
+            <span class="sync-icon">💡</span>
+            <div>
+              <h4 style="color: var(--color-primary);">Tornar Permanente para Qualquer Dispositivo</h4>
+              <p>Quer que as fotos já venham salvas para todos sem precisar sincronizar? Clique em <strong>Copiar Dados da Escala</strong> acima e me envie no chat que eu salvo diretamente no código da aplicação!</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline" id="btnCancelSyncModal">Fechar</button>
+      </div>
     </div>
   </div>
 
@@ -489,4 +581,5 @@
   <script src="data.js"></script>
   <script src="app.js"></script>
 </body>
+
 </html>

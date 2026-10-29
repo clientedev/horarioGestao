@@ -14,7 +14,7 @@ const state = {
   statusFilter: "all", // "all", "working", "offline", "offday"
   cfpFilter: "all",    // "all", "103", "108"
   currentView: "cards", // "cards", "table", "timeline"
-  
+
   // Modo Simulação
   isSimulating: false,
   simulatedDay: 1, // 0-6
@@ -90,12 +90,12 @@ function saveData() {
 function startClock() {
   updateClockDisplay();
   if (state.clockInterval) clearInterval(state.clockInterval);
-  
+
   let lastMinute = new Date().getMinutes();
 
   state.clockInterval = setInterval(() => {
     updateClockDisplay();
-    
+
     // Atualiza status e cards somente quando o minuto mudar (e não a cada segundo)
     if (!state.isSimulating) {
       const currentMinute = new Date().getMinutes();
@@ -293,6 +293,41 @@ function getInitials(name) {
   return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
 }
 
+// Retorna as tags HTML de CFP para um colaborador (mostra ambas 103 e 108 se ele atuar em ambas as unidades)
+function renderCfpBadges(colab, activeTodayCfp) {
+  const units = new Set();
+
+  if (colab.cpf_cfp) {
+    if (colab.cpf_cfp.includes("103")) units.add("103");
+    if (colab.cpf_cfp.includes("108")) units.add("108");
+  }
+
+  if (colab.schedule) {
+    Object.values(colab.schedule).forEach(s => {
+      if (s && s.cfp) {
+        if (s.cfp.includes("103")) units.add("103");
+        if (s.cfp.includes("108")) units.add("108");
+      }
+    });
+  }
+
+  if (units.size === 0) {
+    const raw = colab.cpf_cfp || "CFP";
+    return `<span class="card-cfp-pill ${raw.includes("103") ? "cfp-103" : "cfp-108"}">CFP ${raw}</span>`;
+  }
+
+  const sortedUnits = Array.from(units).sort();
+
+  return sortedUnits.map(unit => {
+    const isToday = activeTodayCfp && activeTodayCfp.includes(unit);
+    return `
+      <span class="card-cfp-pill cfp-${unit} ${isToday ? "is-today-unit" : ""}" title="Unidade CFP ${unit}${isToday ? " (Hoje nesta unidade)" : ""}">
+        CFP ${unit} ${isToday ? `<span class="today-dot">● Hoje</span>` : ""}
+      </span>
+    `;
+  }).join("");
+}
+
 // ========================================================
 // FILTROS & PESQUISA
 // ========================================================
@@ -309,11 +344,12 @@ function getFilteredCollaborators() {
       if (!matchName && !matchCfp && !matchCargo) return false;
     }
 
-    // 2. Filtro de CFP
+    // 2. Filtro de CFP (inclui quem atua na unidade geral ou em algum dia da semana)
     if (state.cfpFilter !== "all") {
-      const statusInfo = getColaboratorStatus(colab, moment);
-      const activeCfp = statusInfo.todayCfp || colab.cpf_cfp;
-      if (!activeCfp.includes(state.cfpFilter)) return false;
+      const target = state.cfpFilter;
+      const hasGeneral = (colab.cpf_cfp || "").includes(target);
+      const hasInSchedule = colab.schedule && Object.values(colab.schedule).some(s => s && s.cfp && s.cfp.includes(target));
+      if (!hasGeneral && !hasInSchedule) return false;
     }
 
     // 3. Filtro de Status
@@ -359,10 +395,6 @@ function updateStats() {
 
 // Atualiza elementos dinâmicos (tempo restante, progresso) sem recriar toda a árvore DOM
 function updateDynamicElements() {
-  const moment = getCurrentMoment();
-  const list = getFilteredCollaborators();
-
-  // Se a quantidade de cards exibidos mudou ou um status virou de offline para working, recarrega
   renderCards();
   renderTimeline();
 }
@@ -392,18 +424,23 @@ function renderCards() {
       const d = colab.schedule[dayKey];
       const isToday = dayKey === moment.dayOfWeek;
       const dayName = WEEK_DAYS.find(w => w.key === dayKey).short;
-      
+
       let badgeText = "Folga";
       let isOff = true;
+      let unitBadge = "";
       if (d && d.active && !d.isOff && d.start) {
         badgeText = `${d.start.split(":")[0]}h-${d.end.split(":")[0]}h`;
         isOff = false;
+        if (d.cfp) {
+          unitBadge = `<span class="mini-day-unit cfp-${d.cfp}">CFP ${d.cfp}</span>`;
+        }
       }
 
       return `
         <div class="mini-day ${isToday ? "is-today" : ""}">
           <span class="mini-day-name">${dayName}</span>
           <span class="mini-day-badge ${isOff ? "off" : ""}">${badgeText}</span>
+          ${unitBadge}
         </div>
       `;
     }).join("");
@@ -445,9 +482,7 @@ function renderCards() {
           <div class="card-title-group">
             <h4 class="card-name" title="${colab.name}">${colab.name}</h4>
             <div class="card-meta">
-              <span class="card-cfp-pill ${statusInfo.todayCfp.includes("103") ? "cfp-103" : ""}">
-                CFP ${statusInfo.todayCfp}
-              </span>
+              ${renderCfpBadges(colab, statusInfo.todayCfp)}
               <span class="card-cargo">${colab.cargo || "Gestão"}</span>
             </div>
           </div>
@@ -465,7 +500,7 @@ function renderCards() {
             <span class="status-beacon"></span>
             <div>
               <div class="status-main-text">${statusInfo.label}</div>
-              <div class="status-sub-text">${statusInfo.details}</div>
+              <div class="status-sub-text">${statusInfo.details} ${statusInfo.todayCfp ? `• Unidade CFP ${statusInfo.todayCfp}` : ""}</div>
             </div>
           </div>
           ${statusInfo.startFormatted ? `
@@ -515,13 +550,14 @@ function renderTable() {
     const daysCellsHtml = [1, 2, 3, 4, 5, 6].map(dayKey => {
       const schedule = colab.schedule[dayKey];
       const isToday = dayKey === moment.dayOfWeek;
-      
+
       let content = "";
       if (schedule && schedule.active && !schedule.isOff && schedule.start) {
+        const unit = schedule.cfp || (colab.cpf_cfp.includes("103") && !colab.cpf_cfp.includes("108") ? "103" : "108");
         content = `
           <div class="schedule-cell-box">
             <span class="time-range-text">${schedule.start} às ${schedule.end}</span>
-            ${schedule.cfp && schedule.cfp !== colab.cpf_cfp ? `<span class="day-cfp-badge">CFP ${schedule.cfp}</span>` : ""}
+            <span class="day-cfp-badge cfp-${unit}">CFP ${unit}</span>
           </div>
         `;
       } else {
@@ -553,9 +589,9 @@ function renderTable() {
           </div>
         </td>
         <td>
-          <span class="card-cfp-pill ${colab.cpf_cfp.includes("103") ? "cfp-103" : ""}">
-            ${colab.cpf_cfp}
-          </span>
+          <div style="display: flex; gap: 4px; flex-wrap: wrap;">
+            ${renderCfpBadges(colab, statusInfo.todayCfp)}
+          </div>
         </td>
         ${daysCellsHtml}
         <td class="td-actions">
@@ -663,7 +699,7 @@ function resetAllFilters() {
   document.getElementById("searchInput").value = "";
   document.getElementById("clearSearchBtn").classList.add("hidden");
   document.getElementById("cfpFilter").value = "all";
-  
+
   // Atualiza pílulas e cards de status
   document.querySelectorAll(".stat-card").forEach(c => c.classList.remove("active-filter"));
   document.querySelectorAll(".filter-pills .pill").forEach(p => {
@@ -703,7 +739,6 @@ function openNewColabModal() {
 
   renderModalScheduleInputs(defaultSchedule);
   colabModal.classList.remove("hidden");
-  colabModal.style.display = "flex";
   document.getElementById("editColabName").focus();
 }
 
@@ -718,7 +753,7 @@ function openEditModal(colabId) {
     document.getElementById("editColabCfp").value = colab.cpf_cfp || "";
     document.getElementById("editColabCargo").value = colab.cargo || "Gestão Operacional";
     document.getElementById("editAvatarUrl").value = colab.avatarUrl || "";
-    
+
     const deleteBtn = document.getElementById("btnDeleteColab");
     if (deleteBtn) deleteBtn.classList.remove("hidden");
 
@@ -726,7 +761,6 @@ function openEditModal(colabId) {
     renderModalScheduleInputs(colab.schedule || {});
 
     colabModal.classList.remove("hidden");
-    colabModal.style.display = "flex";
   } catch (err) {
     console.error("Erro ao abrir modal de edição:", err);
   }
@@ -734,7 +768,6 @@ function openEditModal(colabId) {
 
 function closeModal() {
   colabModal.classList.add("hidden");
-  colabModal.style.display = "none";
 }
 
 function updateModalAvatarPreview(url, fallbackText) {
@@ -765,7 +798,7 @@ function updateModalAvatarPreview(url, fallbackText) {
 function renderModalScheduleInputs(schedule) {
   const container = document.getElementById("scheduleDaysList");
   if (!container) return;
-  
+
   const safeSchedule = schedule || {};
   const orderedDays = [1, 2, 3, 4, 5, 6, 0];
 
@@ -804,7 +837,7 @@ function renderModalScheduleInputs(schedule) {
 }
 
 // Alternar Folga em um dia no modal
-window.toggleDayOff = function(dayKey) {
+window.toggleDayOff = function (dayKey) {
   const row = document.querySelector(`.day-row-item[data-day-key="${dayKey}"]`);
   if (!row) return;
 
@@ -928,57 +961,57 @@ function setupEventListeners() {
     updateModalAvatarPreview(avatarInput.value, getInitials(name));
   });
 
-// Processa e redimensiona arquivo ou blob de imagem colado
-function processImageFile(file) {
-  if (!file || !file.type.startsWith("image/")) {
-    showToast("Por favor, cole ou selecione um arquivo de imagem válido", "warning");
-    return;
-  }
-
-  const reader = new FileReader();
-  reader.onload = (event) => {
-    compressImage(event.target.result, 280, 280, (compressedDataUrl) => {
-      const avatarInput = document.getElementById("editAvatarUrl");
-      avatarInput.value = compressedDataUrl;
-      const name = document.getElementById("editColabName").value;
-      updateModalAvatarPreview(compressedDataUrl, getInitials(name));
-      showToast("Foto colada com sucesso!", "success");
-    });
-  };
-  reader.readAsDataURL(file);
-}
-
-// Redimensiona a imagem usando canvas para manter o tamanho compacto no localStorage
-function compressImage(srcDataUrl, maxWidth, maxHeight, callback) {
-  const img = new Image();
-  img.onload = () => {
-    let width = img.width;
-    let height = img.height;
-
-    if (width > height) {
-      if (width > maxWidth) {
-        height = Math.round((height * maxWidth) / width);
-        width = maxWidth;
-      }
-    } else {
-      if (height > maxHeight) {
-        width = Math.round((width * maxHeight) / height);
-        height = maxHeight;
-      }
+  // Processa e redimensiona arquivo ou blob de imagem colado
+  function processImageFile(file) {
+    if (!file || !file.type.startsWith("image/")) {
+      showToast("Por favor, cole ou selecione um arquivo de imagem válido", "warning");
+      return;
     }
 
-    const canvas = document.createElement("canvas");
-    canvas.width = width;
-    canvas.height = height;
-    const ctx = canvas.getContext("2d");
-    ctx.drawImage(img, 0, 0, width, height);
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      compressImage(event.target.result, 280, 280, (compressedDataUrl) => {
+        const avatarInput = document.getElementById("editAvatarUrl");
+        avatarInput.value = compressedDataUrl;
+        const name = document.getElementById("editColabName").value;
+        updateModalAvatarPreview(compressedDataUrl, getInitials(name));
+        showToast("Foto colada com sucesso!", "success");
+      });
+    };
+    reader.readAsDataURL(file);
+  }
 
-    // Exporta JPEG com 85% de qualidade (apenas ~15-25KB)
-    const resultDataUrl = canvas.toDataURL("image/jpeg", 0.85);
-    callback(resultDataUrl);
-  };
-  img.src = srcDataUrl;
-}
+  // Redimensiona a imagem usando canvas para manter o tamanho compacto no localStorage
+  function compressImage(srcDataUrl, maxWidth, maxHeight, callback) {
+    const img = new Image();
+    img.onload = () => {
+      let width = img.width;
+      let height = img.height;
+
+      if (width > height) {
+        if (width > maxWidth) {
+          height = Math.round((height * maxWidth) / width);
+          width = maxWidth;
+        }
+      } else {
+        if (height > maxHeight) {
+          width = Math.round((width * maxHeight) / height);
+          height = maxHeight;
+        }
+      }
+
+      const canvas = document.createElement("canvas");
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext("2d");
+      ctx.drawImage(img, 0, 0, width, height);
+
+      // Exporta JPEG com 85% de qualidade (apenas ~15-25KB)
+      const resultDataUrl = canvas.toDataURL("image/jpeg", 0.85);
+      callback(resultDataUrl);
+    };
+    img.src = srcDataUrl;
+  }
 
   // Chips de fotos rápidas no modal
   document.querySelectorAll(".quick-avatar-chips .chip-btn").forEach(btn => {
@@ -1005,7 +1038,7 @@ function compressImage(srcDataUrl, maxWidth, maxHeight, callback) {
   // Colar imagem via clipboard (Ctrl+V) com o modal aberto
   window.addEventListener("paste", (e) => {
     if (colabModal.classList.contains("hidden")) return;
-    
+
     const items = e.clipboardData?.items;
     if (!items) return;
 
@@ -1243,6 +1276,131 @@ function compressImage(srcDataUrl, maxWidth, maxHeight, callback) {
       showToast("Escala original restaurada com sucesso!", "success");
     }
   });
+
+  // Sincronização / Backup entre Dispositivos
+  const syncModal = document.getElementById("syncModal");
+  const btnOpenSyncModal = document.getElementById("btnOpenSyncModal");
+  const btnCloseSyncModal = document.getElementById("btnCloseSyncModal");
+  const btnCancelSyncModal = document.getElementById("btnCancelSyncModal");
+  const btnCopyDataJson = document.getElementById("btnCopyDataJson");
+  const btnDownloadJson = document.getElementById("btnDownloadJson");
+  const btnApplyImportedJson = document.getElementById("btnApplyImportedJson");
+  const importJsonFileInput = document.getElementById("importJsonFileInput");
+  const importJsonTextarea = document.getElementById("importJsonTextarea");
+
+  if (btnOpenSyncModal && syncModal) {
+    btnOpenSyncModal.addEventListener("click", () => {
+      syncModal.classList.remove("hidden");
+      syncModal.style.display = "flex";
+      if (importJsonTextarea) importJsonTextarea.value = "";
+    });
+
+    const closeSyncModal = () => {
+      syncModal.classList.add("hidden");
+      syncModal.style.display = "none";
+    };
+
+    if (btnCloseSyncModal) btnCloseSyncModal.addEventListener("click", closeSyncModal);
+    if (btnCancelSyncModal) btnCancelSyncModal.addEventListener("click", closeSyncModal);
+
+    syncModal.addEventListener("click", (e) => {
+      if (e.target === syncModal) closeSyncModal();
+    });
+
+    if (btnCopyDataJson) {
+      btnCopyDataJson.addEventListener("click", async () => {
+        try {
+          const jsonStr = JSON.stringify(state.collaborators, null, 2);
+          if (navigator.clipboard && navigator.clipboard.writeText) {
+            await navigator.clipboard.writeText(jsonStr);
+          } else {
+            const ta = document.createElement("textarea");
+            ta.value = jsonStr;
+            document.body.appendChild(ta);
+            ta.select();
+            document.execCommand("copy");
+            document.body.removeChild(ta);
+          }
+          showToast("Dados e fotos copiados com sucesso! Cole no outro dispositivo.", "success");
+        } catch (err) {
+          if (importJsonTextarea) {
+            importJsonTextarea.value = JSON.stringify(state.collaborators, null, 2);
+            importJsonTextarea.select();
+          }
+          showToast("Dados copiados para o campo abaixo. Copie o texto!", "info");
+        }
+      });
+    }
+
+    if (btnDownloadJson) {
+      btnDownloadJson.addEventListener("click", () => {
+        try {
+          const jsonStr = JSON.stringify(state.collaborators, null, 2);
+          const blob = new Blob([jsonStr], { type: "application/json" });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement("a");
+          a.href = url;
+          a.download = `escala_gestao_com_fotos_${new Date().toISOString().slice(0, 10)}.json`;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          URL.revokeObjectURL(url);
+          showToast("Arquivo de backup baixado com sucesso!", "success");
+        } catch (err) {
+          showToast("Erro ao gerar arquivo para download.", "warning");
+        }
+      });
+    }
+
+    if (btnApplyImportedJson && importJsonTextarea) {
+      btnApplyImportedJson.addEventListener("click", () => {
+        const text = importJsonTextarea.value.trim();
+        if (!text) {
+          showToast("Por favor, cole o texto copiado do outro dispositivo.", "warning");
+          return;
+        }
+
+        try {
+          const parsed = JSON.parse(text);
+          if (!Array.isArray(parsed) || parsed.length === 0) {
+            throw new Error("Formato inválido");
+          }
+          state.collaborators = parsed;
+          saveData();
+          render();
+          closeSyncModal();
+          showToast(`Sucesso! ${parsed.length} colaboradores e fotos carregados neste dispositivo!`, "success");
+        } catch (err) {
+          showToast("Erro: O texto colado não é um formato de dados válido.", "warning");
+        }
+      });
+    }
+
+    if (importJsonFileInput) {
+      importJsonFileInput.addEventListener("change", (e) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          try {
+            const parsed = JSON.parse(event.target.result);
+            if (!Array.isArray(parsed) || parsed.length === 0) {
+              throw new Error("Formato inválido");
+            }
+            state.collaborators = parsed;
+            saveData();
+            render();
+            closeSyncModal();
+            showToast(`Sucesso! Arquivo carregado com ${parsed.length} colaboradores e fotos!`, "success");
+          } catch (err) {
+            showToast("Erro: Arquivo JSON inválido ou corrompido.", "warning");
+          }
+        };
+        reader.readAsText(file);
+      });
+    }
+  }
 }
 
 // Toast de Notificação
