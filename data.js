@@ -931,3 +931,14 @@ const INITIAL_COLLABORATORS = [
   }
  }
 ];
+
+// Dias da semana mapeados de 0 (Domingo) a 6 (Sábado)
+const WEEK_DAYS = [
+  { key: 0, short: "Dom", name: "Domingo" },
+  { key: 1, short: "2ª", name: "2ª-feira" },
+  { key: 2, short: "3ª", name: "3ª-feira" },
+  { key: 3, short: "4ª", name: "4ª-feira" },
+  { key: 4, short: "5ª", name: "5ª-feira" },
+  { key: 5, short: "6ª", name: "6ª-feira" },
+  { key: 6, short: "Sáb", name: "Sábado" }
+];
