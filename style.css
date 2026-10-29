@@ -124,6 +124,10 @@ body.dark-theme {
   box-sizing: border-box;
 }
 
+.hidden {
+  display: none !important;
+}
+
 body {
   font-family: var(--font-body);
   background-color: var(--bg-primary);
@@ -1797,6 +1801,8 @@ select:focus {
   font-size: 0.85rem;
   flex-wrap: wrap;
   gap: 1rem;
+}
+
 /* ========================================================
    ÁREA DE COLAR E UPLOAD DE IMAGEM / AVATAR
    ======================================================== */

@@ -703,6 +703,7 @@ function openNewColabModal() {
 
   renderModalScheduleInputs(defaultSchedule);
   colabModal.classList.remove("hidden");
+  colabModal.style.display = "flex";
   document.getElementById("editColabName").focus();
 }
 
@@ -725,6 +726,7 @@ function openEditModal(colabId) {
     renderModalScheduleInputs(colab.schedule || {});
 
     colabModal.classList.remove("hidden");
+    colabModal.style.display = "flex";
   } catch (err) {
     console.error("Erro ao abrir modal de edição:", err);
   }
@@ -732,6 +734,7 @@ function openEditModal(colabId) {
 
 function closeModal() {
   colabModal.classList.add("hidden");
+  colabModal.style.display = "none";
 }
 
 function updateModalAvatarPreview(url, fallbackText) {
